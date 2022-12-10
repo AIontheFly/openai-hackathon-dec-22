@@ -59,7 +59,7 @@ export default function Whisper(props) {
 
     
       const player = new Audio(URL.createObjectURL(file));
-      player.play();
+      // player.play();
     
     }).catch((e) => {
       alert('We could not retrieve your message');

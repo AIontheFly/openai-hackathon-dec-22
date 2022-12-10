@@ -14,7 +14,10 @@ import FormData from "form-data";
 
 // console.log(openai);
 
-export default function Whisper() {
+export default function Whisper(props) {
+
+  const { setText } = props;
+
   let isRecorded = false;
 
   const recorder = useMemo(() => new MicRecorder({ bitRate: 128 }), []);
@@ -33,7 +36,7 @@ export default function Whisper() {
     recorder.stop();
   };
   
-  const play = () => {
+  const playHandler = () => {
     if (!isRecorded) {
       console.log('Please record before playing...');
       return;
@@ -62,7 +65,7 @@ export default function Whisper() {
 
       fetch("https://whisper.lablab.ai/asr", requestOptions)
         .then(response => response.text())
-        .then(result => console.log(JSON.parse(result).text))
+        .then(result => setText(JSON.parse(result).text))
         .catch(error => console.log('error', error));
 
     
@@ -82,7 +85,7 @@ export default function Whisper() {
       </Head>
       <button onClick = {recordHandler}>Record</button>
       <button onClick = {stopHandler}>Stop</button>
-      <button onClick = {play}>Play</button>
+      <button onClick = {playHandler}>Play</button>
     </>
   );
 }

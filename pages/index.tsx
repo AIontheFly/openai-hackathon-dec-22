@@ -4,23 +4,63 @@ import styles from '../styles/Home.module.css'
 import { useEffect, useState } from 'react';
 import Whisper from './api/whisper';
 
+import { Configuration, OpenAIApi } from 'openai';
+
+// setting up authorized access to the Dall-e API
+const configuration = new Configuration({
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
 export default function Home() {
 
-  // prototype for text to speech
-  // useEffect(() => {
-  //   const synth = window.speechSynthesis;
-  //   const voices = synth.getVoices(); 
-  //   let text = 'Hello World';
-  //   const sayThis = new SpeechSynthesisUtterance(text); 
-  //   sayThis.voice = voices[0]; // 0, 17, 10, 60, 58, 53, 51, 50, 49, 39, 33, 26
-  //   synth.speak(sayThis);
-  // }, []);
-
   const [text, setText] = useState('');
-  console.log("text:", text);
-  const [textHistory, setTextHistory] = useState('');
-  useEffect(() => { setTextHistory( textHistory+ ' ' + text)
+  const [response, setResponse] = useState('');
+  
+  const [textHistory, setTextHistory] = useState([]);
+  const [responseHistory, setResponseHistory] = useState([]);
+
+  // prototype for text to speech
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices(); 
+    const sayThis = new SpeechSynthesisUtterance(response); 
+    sayThis.voice = voices[0]; // 0, 17, 10, 60, 58, 53, 51, 50, 49, 39, 33, 26
+    sayThis.rate = 0.85;
+    synth.speak(sayThis);
+  }, [response]);
+
+  const sendQuery = async (prompt: string): Promise<void> => {
+    const completion: any = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt,
+      max_tokens: 250,
+    })
+    setResponse(await completion.data.choices[0].text);
+  }
+
+  useEffect(() => {
+    if (text === "") {
+      return;
+    }
+    console.log(text);
+    sendQuery(text);
+    setTextHistory([...textHistory, text]);
+    setText("");
     }, [text]);
+
+  useEffect(() => {
+    console.log(response);
+    setResponseHistory( [...responseHistory, response]);
+  }, [response])
+
+  const displayQA = [];
+  // for (let i=0; i < responseHistory.length; i++) {
+  //   displayQA.push({<div>
+  //                     <div>Prompt: {textHistory[i]}</div>
+  //                     <div>Response: {responseHistory[i]}</div>
+  //                   </div>});
+  // }
 
   return (
     <div className={styles.container}>
@@ -30,7 +70,17 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Whisper setText={setText}></Whisper>
-      <div>{textHistory}</div>
+      <div>Prompt: {textHistory}</div>
+      <div>Response: {responseHistory}</div>
+      {/* <div>{displayQA}</div> */}
+      {/* {responseHistory.map((singleResponse, index) => {
+        return(<div>
+          Prompt: {textHistory[index]} <br></br>
+          Response: {singleResponse}
+
+          </div>
+          )
+      })} */}
       <main className={styles.main}>
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>

@@ -4,15 +4,6 @@ import Script from 'next/script';
 import { useState, useMemo, useEffect } from 'react';
 import MicRecorder from 'mic-recorder-to-mp3';
 import FormData from "form-data";
-// import { Configuration, OpenAIApi } from 'openai';
-
-// // setting up authorized access to the Dall-e API
-// const configuration = new Configuration({
-//   apiKey: process.env.DALLE_API_KEY,
-// });
-// const openai = new OpenAIApi(configuration);
-
-// console.log(openai);
 
 export default function Whisper(props) {
 
@@ -34,11 +25,9 @@ export default function Whisper(props) {
 
   const stopHandler = () => {
     recorder.stop();
-  };
-  
-  const playHandler = () => {
+
     if (!isRecorded) {
-      console.log('Please record before playing...');
+      console.log('Please record before stopping...');
       return;
     }
     isRecorded = false;
@@ -70,13 +59,14 @@ export default function Whisper(props) {
 
     
       const player = new Audio(URL.createObjectURL(file));
-      player.play();
+      // player.play();
     
     }).catch((e) => {
       alert('We could not retrieve your message');
       console.log(e);
     });
-  }
+
+  };
 
   return (
     <>
@@ -85,7 +75,6 @@ export default function Whisper(props) {
       </Head>
       <button onClick = {recordHandler}>Record</button>
       <button onClick = {stopHandler}>Stop</button>
-      <button onClick = {playHandler}>Play</button>
     </>
   );
 }

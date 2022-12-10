@@ -4,23 +4,49 @@ import styles from '../styles/Home.module.css'
 import { useEffect, useState } from 'react';
 import Whisper from './api/whisper';
 
+import { Configuration, OpenAIApi } from 'openai';
+
+// setting up authorized access to the Dall-e API
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
 export default function Home() {
 
-  // prototype for text to speech
-  // useEffect(() => {
-  //   const synth = window.speechSynthesis;
-  //   const voices = synth.getVoices(); 
-  //   let text = 'Hello World';
-  //   const sayThis = new SpeechSynthesisUtterance(text); 
-  //   sayThis.voice = voices[0]; // 0, 17, 10, 60, 58, 53, 51, 50, 49, 39, 33, 26
-  //   synth.speak(sayThis);
-  // }, []);
-
   const [text, setText] = useState('');
-  console.log("text:", text);
+  const [response, setResponse] = useState('');
+
+  // prototype for text to speech
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices(); 
+    const sayThis = new SpeechSynthesisUtterance(response); 
+    sayThis.voice = voices[60]; // 0, 17, 10, 60, 58, 53, 51, 50, 49, 39, 33, 26
+    synth.speak(sayThis);
+  }, [response]);
+
+  const sendQuery = async (prompt: string): Promise<void> => {
+    const completion: any = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt,
+      max_tokens: 250,
+    })
+    setResponse(await completion.data.choices[0].text);
+  }
 
   useEffect(() => {
+    if (text === "") {
+      return;
+    }
+    console.log(text);
+    sendQuery(text);
+    setText("");
     }, [text]);
+
+  useEffect(() => {
+    console.log(response);
+  }, [response])
 
   return (
     <div className={styles.container}>

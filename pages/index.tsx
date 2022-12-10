@@ -8,7 +8,7 @@ import { Configuration, OpenAIApi } from 'openai';
 
 // setting up authorized access to the Dall-e API
 const configuration = new Configuration({
-  apiKey: process.env.DALLE_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 

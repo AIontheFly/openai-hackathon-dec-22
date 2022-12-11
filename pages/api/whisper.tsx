@@ -31,6 +31,7 @@ export default function Whisper(props) {
       return;
     }
     isRecorded = false;
+
     recorder
       .stop()
       .getMp3()
@@ -39,16 +40,13 @@ export default function Whisper(props) {
           type: blob.type,
           lastModified: Date.now(),
         });
-
         const formdata = new FormData();
-
         formdata.append("audio_file", file, "voice.mp3");
         const requestOptions = {
           method: "POST",
           body: formdata,
           redirect: "follow",
         };
-
         fetch("https://whisper.lablab.ai/asr", requestOptions)
           .then((response) => response.text())
           .then((result) => setText(JSON.parse(result).text))
@@ -61,12 +59,9 @@ export default function Whisper(props) {
   };
 
   return (
-    <>
-      <Head>
-        <title>Whisper</title>
-      </Head>
+    <div>
       <button onClick={recordHandler}>Record</button>
       <button onClick={stopHandler}>Stop</button>
-    </>
+    </div>
   );
 }

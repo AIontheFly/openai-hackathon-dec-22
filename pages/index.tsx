@@ -1,32 +1,30 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import { useEffect, useState } from 'react';
-import Whisper from './api/whisper';
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import { useEffect, useState } from "react";
+import Whisper from "./api/whisper";
 
-import { Configuration, OpenAIApi } from 'openai';
+import { Configuration, OpenAIApi } from "openai";
 
-// setting up authorized access to the Dall-e API
 const configuration = new Configuration({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
 export default function Home() {
+  const [text, setText] = useState("");
+  const [response, setResponse] = useState("");
 
-  const [text, setText] = useState('');
-  const [response, setResponse] = useState('');
-  
   const [textHistory, setTextHistory] = useState([]);
   const [responseHistory, setResponseHistory] = useState([]);
 
-  // prototype for text to speech
+  // When response is updated, playback response
   useEffect(() => {
     const synth = window.speechSynthesis;
-    const voices = synth.getVoices(); 
-    const sayThis = new SpeechSynthesisUtterance(response); 
+    const voices = synth.getVoices();
+    const sayThis = new SpeechSynthesisUtterance(response);
     sayThis.voice = voices[0]; // 0, 17, 10, 60, 58, 53, 51, 50, 49, 39, 33, 26
-    sayThis.rate = 0.85;
+    sayThis.rate = 1;
     synth.speak(sayThis);
   }, [response]);
 
@@ -35,9 +33,9 @@ export default function Home() {
       model: "text-davinci-003",
       prompt,
       max_tokens: 250,
-    })
+    });
     setResponse(await completion.data.choices[0].text);
-  }
+  };
 
   useEffect(() => {
     if (text === "") {
@@ -47,20 +45,12 @@ export default function Home() {
     sendQuery(text);
     setTextHistory([...textHistory, text]);
     setText("");
-    }, [text]);
+  }, [text]);
 
   useEffect(() => {
     console.log(response);
-    setResponseHistory( [...responseHistory, response]);
-  }, [response])
-
-  const displayQA = [];
-  // for (let i=0; i < responseHistory.length; i++) {
-  //   displayQA.push({<div>
-  //                     <div>Prompt: {textHistory[i]}</div>
-  //                     <div>Response: {responseHistory[i]}</div>
-  //                   </div>});
-  // }
+    setResponseHistory([...responseHistory, response]);
+  }, [response]);
 
   return (
     <div className={styles.container}>
@@ -72,22 +62,13 @@ export default function Home() {
       <Whisper setText={setText}></Whisper>
       <div>Prompt: {textHistory}</div>
       <div>Response: {responseHistory}</div>
-      {/* <div>{displayQA}</div> */}
-      {/* {responseHistory.map((singleResponse, index) => {
-        return(<div>
-          Prompt: {textHistory[index]} <br></br>
-          Response: {singleResponse}
-
-          </div>
-          )
-      })} */}
       <main className={styles.main}>
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
 
         <p className={styles.description}>
-          Get started by editing{' '}
+          Get started by editing{" "}
           <code className={styles.code}>pages/index.tsx</code>
         </p>
 
@@ -130,12 +111,12 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by{" "}
           <span className={styles.logo}>
             <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
           </span>
         </a>
       </footer>
     </div>
-  )
+  );
 }

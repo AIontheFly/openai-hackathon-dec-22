@@ -24,3 +24,89 @@ a {
     background: black;
   }
 }
+
+.content-container {
+  display: flex;
+  flex-direction: column;  
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title > * {
+  margin: 2px;
+}
+
+h2 {
+  color: lightgray;
+  font-weight: 100;
+  text-align: center;
+}
+
+h3 {
+  color: lightgray;
+  font-weight: 100;
+  font-style: italic;
+  font-size: medium;
+}
+
+.recordButton {
+  margin: 1.5em;
+  border-radius: 100px;
+  background-color: red;
+}
+
+.recordButtonON {
+  margin: 1.5em;
+  border-radius: 100px;
+  background-color: rgb(12, 179, 76);
+}
+
+.chat-html {
+  display: flex;
+  margin-bottom: 1em;
+  height: 15em;
+  width: 100%;
+}
+
+.chatHistory {
+  width: 50%;
+  justify-content: center;
+  margin-right: 1em;
+  padding: 0.5em;
+  border: 1px solid rgb(0, 208, 255);
+  border-radius: 5px;
+  overflow: scroll;
+}
+
+.human {
+  color: white;
+  margin-bottom: 0.25em;
+}
+
+.AI {
+  font-style: italic;
+  color: lemonchiffon;
+}
+
+.html {
+  width: 50%;
+  justify-content: center;
+  overflow: scroll;
+  border: 1px solid rgb(0, 208, 255);
+  border-radius: 5px;
+  overflow: scroll;
+  white-space: pre;
+  cursor: pointer;
+}
+
+.render {
+  width: 100%;
+  height: 30em;
+  border: 1px solid rgb(0, 208, 255);
+  border-radius: 5px;
+  overflow: scroll;
+}

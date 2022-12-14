@@ -1,9 +1,8 @@
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
-import { useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Whisper from "./api/whisper";
-
 import { Configuration, OpenAIApi } from "openai";
 
 const configuration = new Configuration({
@@ -14,20 +13,56 @@ const openai = new OpenAIApi(configuration);
 export default function Home() {
   const [text, setText] = useState("");
   const [response, setResponse] = useState("");
-
-  const [textHistory, setTextHistory] = useState([]);
-  const [responseHistory, setResponseHistory] = useState([]);
-
-  // When response is updated, playback response
+  const [chatHistory, setChatHistory] = useState([]);
+  const [html, setHtml] = useState("");
+  const [render, setRender] = useState("");
+  const [isSpacePressed, setIsSpacePressed] = useState(0);
+  // add key event listeners when document is loaded
   useEffect(() => {
-    const synth = window.speechSynthesis;
-    const voices = synth.getVoices();
-    const sayThis = new SpeechSynthesisUtterance(response);
-    sayThis.voice = voices[0]; // 0, 17, 10, 60, 58, 53, 51, 50, 49, 39, 33, 26
-    sayThis.rate = 1;
-    synth.speak(sayThis);
-  }, [response]);
+    if (typeof document !== 'undefined') {
+      document.body.addEventListener("keydown", (e) => {
+        if (e.code === 'Space' && !isSpacePressed) setIsSpacePressed(1);
+      });
+      document.body.addEventListener("keyup", (e) => {
+        if (e.code === 'Space') setIsSpacePressed(2);
+      });
+    }
+  });
+  // TEST TEXT
+  useEffect(() => {
+    const input = (`
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Document</title>
+    </head>
+    <body>
+      <div>hi</div>
+    </body>
+  </html>"`
+    );
+    const render = (
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+      </head>
+      <body>
+        <div>hi</div>
+      </body>
+      </html>
+    );
 
+    setHtml(<div>{input}</div>);
+    setRender(<div>{render}</div>);
+    setChatHistory([<div className="human"><b>Human</b>: Hello</div>, <div className="AI"><b>AI</b>: Hi there.</div>]);
+  }, []);
+
+  // send query to API
   const sendQuery = async (prompt: string): Promise<void> => {
     const completion: any = await openai.createCompletion({
       model: "text-davinci-003",
@@ -36,18 +71,78 @@ export default function Home() {
     });
     setResponse(await completion.data.choices[0].text);
   };
-
-  useEffect(() => {
-    if (text === "") {
-      return;
+  // copy contents of HTML to clipboard
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(html.props.children);
+  }
+  // isolate HTML from AI response
+  const extractHTML = (response) => {
+    response = (`
+    asdawdwadawda
+    awdawd
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+      </head>
+      <body>
+        <div>hi</div>
+      </body>
+    </html>
+    asdasdad
+    asd`
+      );
+    let start;
+    let end;
+    for (let i = 0; i < response.length; i++) {
+      if (response[i] === "<") {
+        const tag = response.slice(i + 1, i + 5);
+        console.log(tag)
+        if (tag === "html") start = i;
+        if (tag === "/htm") {
+          end = i + 7;
+          break;
+        }
+      }
     }
+    return response.slice(start, end);
+  }
+  // When response is updated, playback response
+  const speak = (response) => {
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices();
+    const sayThis = new SpeechSynthesisUtterance(response);
+    sayThis.voice = voices[0]; // 0, 17, 10, 60, 58, 53, 51, 50, 49, 39, 33, 26
+    sayThis.rate = 1;
+    synth.speak(sayThis);
+  };
+  // save user input and send to API
+  useEffect(() => {
+    if (text === "") return;
+    // append prefix to query if render already made
+    // if (render) text = "the same webpage but " + text;
     sendQuery(text);
-    setTextHistory([...textHistory, text]);
+    const fullText = `Human: ${text}`;
+    setChatHistory([...chatHistory, <div className="human"><b>Human:</b>{text}</div>]);
     setText("");
   }, [text]);
-
+  // parse and save AI response
   useEffect(() => {
-    setResponseHistory([...responseHistory, response]);
+    if (response === "") return;
+    // extract html and populate html window
+    setHtml(extractHTML(response));
+    // convert text html to jsx
+    // setRender()
+    // only record response if no html produced
+    if (!html) {
+      setChatHistory([...chatHistory, <div className="AI"><b>AI:</b>{response}</div>]);
+    } else {
+      setChatHistory([...chatHistory, <div className="AI"><b>AI:</b>Rendering webpage...</div>]);
+    }
+    speak(response);
+    setResponse("");
   }, [response]);
 
   return (
@@ -57,16 +152,20 @@ export default function Home() {
         <meta name="description" content="Generated by create next app" />
         {/* <link rel="icon" href="/favicon.ico" /> */}
       </Head>
-
       <main className={styles.main}>
-        <Whisper setText={setText}></Whisper>
-        <div>Prompt: {textHistory}</div>
-        <div>Response: {responseHistory}</div>
+        <div className="title">
+          <h1>Front-End Friend</h1>
+          <h2>Hold record button or space and speak your webpage design ideas</h2>
+          <h3>"A webpage that has..."</h3>
+          <h3>"Center the title and make it blue..."</h3>
+        </div>
+        <Whisper setText={setText} isSpacePressed={isSpacePressed}></Whisper>
+          <div className="chat-html">
+              <div className="chatHistory">{chatHistory}</div>
+              <div className="html" onClick={copyToClipboard}>{html}</div>
+          </div>
+          <div className="render">{render}</div>
       </main>
-
-      <footer className={styles.footer}>
-        {/* FOOTER CONTENT */}
-      </footer>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import { useCallback, useContext, useEffect, useState } from "react";
 import Whisper from "./api/whisper";
+import Render from "./api/render";
 import { Configuration, OpenAIApi } from "openai";
 
 const configuration = new Configuration({
@@ -15,8 +16,8 @@ export default function Home() {
   const [response, setResponse] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [html, setHtml] = useState("");
-  const [render, setRender] = useState("");
   const [isSpacePressed, setIsSpacePressed] = useState(0);
+  const [isIterating, setIsIterating] = useState(false);
   // add key event listeners when document is loaded
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -30,6 +31,7 @@ export default function Home() {
   });
   // TEST TEXT
   useEffect(() => {
+    if (isIterating) return;
     const input = (`
   <html lang="en">
     <head>
@@ -39,27 +41,21 @@ export default function Home() {
       <title>Document</title>
     </head>
     <body>
-      <div>hi</div>
+      <div><b>Getting started:</b></div>
+      <ul>
+      <li>Hold down the mic button or spacebar and speak</li>
+      <li>You can say things like "Create a webpage that..."</li>
+      <li>After the first webpage render, you can say things like "make the title blue..."</li>
+      </ul>
     </body>
-  </html>"`
+  </html>`
     );
-    const render = (
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-      </head>
-      <body>
-        <div>hi</div>
-      </body>
-      </html>
-    );
-
-    setHtml(<div>{input}</div>);
-    setRender(<div>{render}</div>);
-    setChatHistory([<div className="human"><b>Human</b>: Hello</div>, <div className="AI"><b>AI</b>: Hi there.</div>]);
+    setHtml(input);
+    setChatHistory([
+    <div className="human"><b>Human</b>: Create a webpage that instructs users how to use Frontend Friend</div>, 
+    <div className="AI"><b>AI</b>: Rendering webpage...</div>,
+    <div className="AI"><b>AI</b>: Webpage rendered!</div>
+  ]);
   }, []);
 
   // send query to API
@@ -67,39 +63,23 @@ export default function Home() {
     const completion: any = await openai.createCompletion({
       model: "text-davinci-003",
       prompt,
-      max_tokens: 250,
+      max_tokens: 1000,
     });
     setResponse(await completion.data.choices[0].text);
+    setIsIterating(true);
   };
   // copy contents of HTML to clipboard
   const copyToClipboard = () => {
+    if (!html.props) return;
     navigator.clipboard.writeText(html.props.children);
   }
   // isolate HTML from AI response
   const extractHTML = (response) => {
-    response = (`
-    asdawdwadawda
-    awdawd
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-      </head>
-      <body>
-        <div>hi</div>
-      </body>
-    </html>
-    asdasdad
-    asd`
-      );
-    let start;
-    let end;
+    let start = 0;
+    let end = 0;
     for (let i = 0; i < response.length; i++) {
       if (response[i] === "<") {
         const tag = response.slice(i + 1, i + 5);
-        console.log(tag)
         if (tag === "html") start = i;
         if (tag === "/htm") {
           end = i + 7;
@@ -123,7 +103,9 @@ export default function Home() {
     if (text === "") return;
     // append prefix to query if render already made
     // if (render) text = "the same webpage but " + text;
-    sendQuery(text);
+    let query = text;
+    query = isIterating ? `${html} \nthe above html but `+ text : 'html code for a webpage with ' + text;
+    sendQuery(query);
     const fullText = `Human: ${text}`;
     setChatHistory([...chatHistory, <div className="human"><b>Human:</b>{text}</div>]);
     setText("");
@@ -132,18 +114,20 @@ export default function Home() {
   useEffect(() => {
     if (response === "") return;
     // extract html and populate html window
-    setHtml(extractHTML(response));
-    // convert text html to jsx
-    // setRender()
+    const extractedHtml = extractHTML(response)
+    setHtml(extractedHtml);
     // only record response if no html produced
-    if (!html) {
+    if (extractedHtml.length <= 1) {
       setChatHistory([...chatHistory, <div className="AI"><b>AI:</b>{response}</div>]);
+      speak(response);
     } else {
       setChatHistory([...chatHistory, <div className="AI"><b>AI:</b>Rendering webpage...</div>]);
+      speak("Rendering webpage...");
     }
-    speak(response);
     setResponse("");
   }, [response]);
+
+  useEffect(() => {}, [html]);
 
   return (
     <div className={styles.container}>
@@ -155,16 +139,13 @@ export default function Home() {
       <main className={styles.main}>
         <div className="title">
           <h1>Front-End Friend</h1>
-          <h2>Hold record button or space and speak your webpage design ideas</h2>
-          <h3>"A webpage that has..."</h3>
-          <h3>"Center the title and make it blue..."</h3>
         </div>
         <Whisper setText={setText} isSpacePressed={isSpacePressed}></Whisper>
           <div className="chat-html">
               <div className="chatHistory">{chatHistory}</div>
-              <div className="html" onClick={copyToClipboard}>{html}</div>
+              <div className="html" onClick={copyToClipboard}>{html}</div> 
           </div>
-          <div className="render">{render}</div>
+          <div className="render"><Render html={html}></Render></div>
       </main>
     </div>
   );

@@ -16,6 +16,8 @@
     "eslint-config-next": "13.0.6",
     "form-data": "^4.0.0",
     "fs": "^0.0.1-security",
+    "interview": "^0.1.2",
+    "interweave": "^13.0.0",
     "mic-recorder-to-mp3": "^2.2.2",
     "next": "13.0.6",
     "node-record-lpcm16": "^1.0.1",

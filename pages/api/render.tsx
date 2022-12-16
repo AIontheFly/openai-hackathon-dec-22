@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 // take voice input from user and convert to text
 export default function Render(props) {
   const { html } = props;
-  console.log(html)
   return (
     <div>
       <div className="render" dangerouslySetInnerHTML={{__html: html}}></div>

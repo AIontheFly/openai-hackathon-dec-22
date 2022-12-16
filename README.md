@@ -6,6 +6,7 @@
 
 - Clone the repo
 - npm i to install dependencies
+- add a .env file with the global variable named NEXT_PUBLIC_OPENAI_API_KEY={Your OPENAI API key}
 - npm run dev and go to localhost:3000
 
 ## How to use

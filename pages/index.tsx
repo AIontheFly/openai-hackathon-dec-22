@@ -99,7 +99,7 @@ export default function Home() {
       );
       setHtml(input);
       setChatHistory([
-      <div className="human"><b>Human</b>: Create a webpage that instructs users how to use Frontend Friend</div>, 
+      <div className="human"><b>Human</b>: Create a webpage that instructs users how to use WebWizard</div>, 
       <div className="AI"><b>AI</b>: Rendering webpage...</div>,
       <div className="AI"><b>AI</b>: Webpage rendered!</div>
     ]);
@@ -164,7 +164,7 @@ export default function Home() {
       <main className={styles.main}>
         <div className="title">
           <button className="restart" onClick={resetState}>restart</button>
-          <h1>Front-End Friend</h1>
+          <h1>WebWizard</h1>
           <button className="mute" onClick={muteVoice}>🔊</button>
         </div>
         <Whisper setText={setText} isSpacePressed={isSpacePressed}></Whisper>

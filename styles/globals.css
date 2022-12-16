@@ -32,12 +32,10 @@ a {
 
 .title {
   display: flex;
-  flex-direction: column;
+  width: 100%;
+  flex-direction: row;
   align-items: center;
-}
-
-.title > * {
-  margin: 2px;
+  justify-content: space-between;
 }
 
 h2 {
@@ -51,6 +49,18 @@ h3 {
   font-weight: 100;
   font-style: italic;
   font-size: medium;
+}
+
+.mute {
+  float: right;
+  background-color: red;
+}
+
+.buttons > * {
+  height: 2em;
+  align-items: center;
+  margin: 1.5em;
+  border-radius: 100px;
 }
 
 .recordButton {
@@ -80,6 +90,11 @@ h3 {
   border: 1px solid rgb(0, 208, 255);
   border-radius: 5px;
   overflow: scroll;
+}
+
+.copyToClipboard {
+  z-index: 99999;
+  float: right;
 }
 
 .human {

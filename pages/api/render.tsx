@@ -10,7 +10,6 @@ export default function Render(props) {
   console.log(html)
   return (
     <div>
-       {/* <div className="render" dangerouslySetInnerHTML={html.props ? {__html: html.props.children} : null}></div> */}
       <div className="render" dangerouslySetInnerHTML={{__html: html}}></div>
     </div>
   );

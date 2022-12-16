@@ -18,6 +18,7 @@ export default function Home() {
   const [html, setHtml] = useState("");
   const [isSpacePressed, setIsSpacePressed] = useState(0);
   const [isIterating, setIsIterating] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   // add key event listeners when document is loaded
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -29,35 +30,11 @@ export default function Home() {
       });
     }
   });
-  // TEST TEXT
+  // Default text
   useEffect(() => {
     if (isIterating) return;
-    const input = (`
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Document</title>
-    </head>
-    <body>
-      <div><b>Getting started:</b></div>
-      <ul>
-      <li>Hold down the mic button or spacebar and speak</li>
-      <li>You can say things like "Create a webpage that..."</li>
-      <li>After the first webpage render, you can say things like "make the title blue..."</li>
-      </ul>
-    </body>
-  </html>`
-    );
-    setHtml(input);
-    setChatHistory([
-    <div className="human"><b>Human</b>: Create a webpage that instructs users how to use Frontend Friend</div>, 
-    <div className="AI"><b>AI</b>: Rendering webpage...</div>,
-    <div className="AI"><b>AI</b>: Webpage rendered!</div>
-  ]);
+    resetState();
   }, []);
-
   // send query to API
   const sendQuery = async (prompt: string): Promise<void> => {
     const completion: any = await openai.createCompletion({
@@ -70,8 +47,8 @@ export default function Home() {
   };
   // copy contents of HTML to clipboard
   const copyToClipboard = () => {
-    if (!html.props) return;
-    navigator.clipboard.writeText(html.props.children);
+    if (!html) return;
+    navigator.clipboard.writeText(html);
   }
   // isolate HTML from AI response
   const extractHTML = (response) => {
@@ -91,6 +68,7 @@ export default function Home() {
   }
   // When response is updated, playback response
   const speak = (response) => {
+    if (isMuted) return;
     const synth = window.speechSynthesis;
     const voices = synth.getVoices();
     const sayThis = new SpeechSynthesisUtterance(response);
@@ -98,6 +76,48 @@ export default function Home() {
     sayThis.rate = 1;
     synth.speak(sayThis);
   };
+  // reset state to default
+  const resetState = () => {
+    const input = (`
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Getting Started</title>
+      </head>
+      <body>
+        <div><b>Getting started:</b></div>
+        <ul>
+        <li>Hold down the mic button or spacebar and speak</li>
+        <li>You can say things like "Create a webpage that..."</li>
+        <li>After the first webpage render, you can say things like "make the title blue..."</li>
+        <li>Press Restart to start with a new webpage</li>
+        </ul>
+      </body>
+    </html>`
+      );
+      setHtml(input);
+      setChatHistory([
+      <div className="human"><b>Human</b>: Create a webpage that instructs users how to use Frontend Friend</div>, 
+      <div className="AI"><b>AI</b>: Rendering webpage...</div>,
+      <div className="AI"><b>AI</b>: Webpage rendered!</div>
+    ]);
+  };
+  useEffect(() => {
+    const muteButton = document.querySelector(".mute")
+      if (muteButton) muteButton.addEventListener("click", (e) => {
+        if (!isMuted) {
+          muteButton.setAttribute("style", "background-color: gray");
+        } else {
+          muteButton.setAttribute("style", "background-color: red");
+        }
+      });
+  }, [isMuted]);
+  // mutes AI voice
+  const muteVoice = () => {
+    !isMuted ? setIsMuted(true) : setIsMuted(false);
+  }
   // save user input and send to API
   useEffect(() => {
     if (text === "") return;
@@ -107,7 +127,12 @@ export default function Home() {
     query = isIterating ? `${html} \nthe above html but `+ text : 'html code for a webpage with ' + text;
     sendQuery(query);
     const fullText = `Human: ${text}`;
-    setChatHistory([...chatHistory, <div className="human"><b>Human:</b>{text}</div>]);
+    setChatHistory([
+      ...chatHistory, 
+    <div className="human"><b>Human:</b>{text}</div>,
+    <div className="AI"><b>AI:</b>Rendering webpage...</div>
+    ]);
+    speak(" Rendering webpage...");
     setText("");
   }, [text]);
   // parse and save AI response
@@ -121,13 +146,13 @@ export default function Home() {
       setChatHistory([...chatHistory, <div className="AI"><b>AI:</b>{response}</div>]);
       speak(response);
     } else {
-      setChatHistory([...chatHistory, <div className="AI"><b>AI:</b>Rendering webpage...</div>]);
-      speak("Rendering webpage...");
+      setChatHistory([...chatHistory, <div className="AI"><b>AI:</b>Webpage rendered!</div>]);
+      speak("Webpage rendered!");
     }
     setResponse("");
   }, [response]);
-
-  useEffect(() => {}, [html]);
+  
+  //useEffect(() => {}, [html]);
 
   return (
     <div className={styles.container}>
@@ -138,12 +163,17 @@ export default function Home() {
       </Head>
       <main className={styles.main}>
         <div className="title">
+          <button className="restart" onClick={resetState}>restart</button>
           <h1>Front-End Friend</h1>
+          <button className="mute" onClick={muteVoice}>🔊</button>
         </div>
         <Whisper setText={setText} isSpacePressed={isSpacePressed}></Whisper>
           <div className="chat-html">
               <div className="chatHistory">{chatHistory}</div>
-              <div className="html" onClick={copyToClipboard}>{html}</div> 
+              <div className="html" onClick={copyToClipboard}>
+              <span className="copyToClipboard">📋 <i>Copy to Clipboard </i></span>
+                {html}
+                </div> 
           </div>
           <div className="render"><Render html={html}></Render></div>
       </main>

@@ -17,7 +17,7 @@ export default function Whisper(props) {
   // begin recording when button is held down
   const mouseDownHandler = () => {
     const recordButton = document.querySelector('.recordButton');
-    recordButton.classList = "recordButtonON";
+    if (recordButton) recordButton.setAttribute("class", "recordButtonON");
     recorder.stop();
     recorder
       .start()
@@ -29,7 +29,8 @@ export default function Whisper(props) {
   // end recording when mouse button is released
   const mouseUpHandler = () => {
     const recordButton = document.querySelector('.recordButtonON');
-    recordButton.classList = "recordButton";
+    if (recordButton) recordButton.setAttribute("class", "recordButton");
+    
     recorder
       .stop()
       .getMp3()
